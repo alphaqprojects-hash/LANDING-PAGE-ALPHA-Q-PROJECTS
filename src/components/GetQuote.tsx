@@ -9,20 +9,72 @@ export function GetQuote() {
     service: '',
     message: ''
   });
+  
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState({
+    type: null as 'success' | 'error' | null,
+    message: ''
+  });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
+    // Clear status when user starts typing again
+    if (submitStatus.type) {
+      setSubmitStatus({ type: null, message: '' });
+    }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Create WhatsApp message
-    const message = `Hi! I'd like a quote for:\n\nName: ${formData.name}\nEmail: ${formData.email}\nPhone: ${formData.phone}\nService: ${formData.service}\nDetails: ${formData.message}`;
-    const whatsappUrl = `https://wa.me/61469349411?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, '_blank');
+    setIsSubmitting(true);
+    setSubmitStatus({ type: null, message: '' });
+
+    try {
+      // API endpoint - update this URL when you deploy to production
+      const apiUrl = process.env.NODE_ENV === 'production' 
+        ? '/api/contact' // This will be handled by Vercel serverless functions
+        : 'http://localhost:3001/api/contact';
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        setSubmitStatus({
+          type: 'success',
+          message: result.message || 'Quote request submitted successfully! Check your email for confirmation.'
+        });
+        // Clear form after successful submission
+        setFormData({
+          name: '',
+          email: '',
+          phone: '',
+          service: '',
+          message: ''
+        });
+      } else {
+        throw new Error(result.message || 'Failed to submit quote request');
+      }
+    } catch (error) {
+      console.error('Form submission error:', error);
+      setSubmitStatus({
+        type: 'error',
+        message: error instanceof Error 
+          ? error.message 
+          : 'Failed to submit request. Please try calling us directly at (04) 6934 9411.'
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleCall = () => {
@@ -204,14 +256,46 @@ export function GetQuote() {
                   />
                 </div>
 
+                {/* Status Messages */}
+                {submitStatus.type && (
+                  <div className={`p-4 rounded-xl mb-4 ${
+                    submitStatus.type === 'success' 
+                      ? 'bg-green-50 border border-green-200 text-green-800' 
+                      : 'bg-red-50 border border-red-200 text-red-800'
+                  }`}>
+                    <div className="flex items-center gap-2">
+                      {submitStatus.type === 'success' ? (
+                        <CheckCircle className="w-5 h-5 text-green-600" />
+                      ) : (
+                        <div className="w-5 h-5 text-red-600">⚠️</div>
+                      )}
+                      <p className="text-sm font-medium">{submitStatus.message}</p>
+                    </div>
+                  </div>
+                )}
+
                 {/* Submit Buttons - Mobile Optimized */}
                 <div className="space-y-3 sm:space-y-4 pt-2">
                   <button
                     type="submit"
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3.5 sm:py-4 rounded-xl transition-all duration-200 font-medium shadow-lg hover:shadow-xl group text-sm sm:text-base"
+                    disabled={isSubmitting}
+                    className={`w-full px-6 py-3.5 sm:py-4 rounded-xl transition-all duration-200 font-medium shadow-lg hover:shadow-xl group text-sm sm:text-base ${
+                      isSubmitting 
+                        ? 'bg-gray-400 cursor-not-allowed' 
+                        : 'bg-blue-600 hover:bg-blue-700 text-white'
+                    }`}
                   >
-                    Send Quote Request
-                    <ArrowRight className="w-4 h-4 ml-2 inline group-hover:translate-x-1 transition-transform" />
+                    {isSubmitting ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        Sending Request...
+                      </span>
+                    ) : (
+                      <>
+                        Send Quote Request
+                        <ArrowRight className="w-4 h-4 ml-2 inline group-hover:translate-x-1 transition-transform" />
+                      </>
+                    )}
                   </button>
                   
                   <div className="text-center">

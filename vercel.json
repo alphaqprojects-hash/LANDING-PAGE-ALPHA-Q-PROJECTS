@@ -4,6 +4,19 @@
   "devCommand": "npm run dev",
   "installCommand": "npm install",
   "framework": "vite",
+  "functions": {
+    "api/contact/index.js": {
+      "runtime": "nodejs18.x"
+    },
+    "api/index.js": {
+      "runtime": "nodejs18.x"
+    }
+  },
+  "env": {
+    "EMAIL_USER": "alphaqprojects@gmail.com",
+    "EMAIL_FROM": "alphaqprojects@gmail.com",
+    "EMAIL_TO": "alphaqprojects@gmail.com"
+  },
   "rewrites": [
     {
       "source": "/(.*)",
