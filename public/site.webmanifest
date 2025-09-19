@@ -1,0 +1,22 @@
+{
+  "name": "AlphaQ Projects",
+  "short_name": "AlphaQ",
+  "description": "Melbourne Home Renovation Specialists",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "16x16 32x32 48x48 64x64 128x128 256x256",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}
